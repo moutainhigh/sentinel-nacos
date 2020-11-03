@@ -1,0 +1,51 @@
+spring:
+  cloud:
+    sentinel:
+      nacos-addr: localhost:8848
+      nacos-namespace: 641b6fdc-f21a-4307-b84e-b05286cbb0b2
+      nacos-group-id: DEFAULT_GROUP
+      data-type: json
+      datasource:
+        flow:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.flow.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            # 规则类型，取值见：org.springframework.cloud.alibaba.sentinel.datasource.RuleType
+            rule-type: flow
+            data-type: ${spring.cloud.sentinel.data-type}
+        degrade:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.degrade.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            rule-type: degrade
+            data-type: ${spring.cloud.sentinel.data-type}
+        system:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.system.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            rule-type: system
+            data-type: ${spring.cloud.sentinel.data-type}
+        authority:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.authority.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            rule-type: authority
+            data-type: ${spring.cloud.sentinel.data-type}
+        param-flow:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.param-flow.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            rule-type: param-flow
+            data-type: ${spring.cloud.sentinel.data-type}
+        gw-flow:
+          nacos:
+            server-addr: ${spring.cloud.sentinel.nacos-addr}
+            data-id: ${spring.application.name}-${spring.cloud.sentinel.datasource.gateway-flow.nacos.rule-type}-rules
+            group-id: ${spring.cloud.sentinel.nacos-group-id}
+            rule-type: gw-flow
+            data-type: ${spring.cloud.sentinel.data-type}

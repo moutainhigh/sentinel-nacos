@@ -22,11 +22,14 @@ package com.alibaba.csp.sentinel.dashboard.rule;
 public interface DynamicRulePublisher<T> {
 
     /**
-     * Publish rules to remote rule configuration center for given application name.
-     *
-     * @param app app name
-     * @param rules list of rules to push
+     * 将规则发布到给定应用程序名称的远程规则配置中心。，原方法增加规则枚举参数
+     * @param app app Name
+     * @param rules 要推送的规则集合
+     * @param rule 规则枚举对象
+     * @author 松果
+     * @date 2020/11/3 10:46
+     * @return void
      * @throws Exception if some error occurs
      */
-    void publish(String app, T rules) throws Exception;
+    void publish(String app, T rules, DynamicEnums.Rule rule) throws Exception;
 }
