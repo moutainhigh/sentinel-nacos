@@ -8,12 +8,14 @@ package com.alibaba.csp.sentinel.dashboard.rule;
  */
 public interface DynamicConstants {
 
-    String CONFIG = "spring.cloud.sentinel.datasource.{rule}.{type}.{property}";
+    /**
+     *  DataId 所属服务
+     */
+    String DATA_ID_CLIENT = "-sentinel";
 
-    String SERVER_ADDR = "server-addr";
-    String DATA_ID = "data-id";
-    String GROUP_ID = "group-id";
-    String RULE_TYPE = "rule-type";
-    String DATA_TYPE = "data-type";
+    /**
+     *  DataId 尾缀拼接
+     */
+    String DATA_ID_POSTFIX = "-rules";
 
 }

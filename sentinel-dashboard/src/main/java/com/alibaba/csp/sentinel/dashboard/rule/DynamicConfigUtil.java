@@ -2,6 +2,8 @@ package com.alibaba.csp.sentinel.dashboard.rule;
 
 import org.springframework.core.env.Environment;
 
+import java.util.Objects;
+
 /**
  * 动态配置工具
  * @author 松果
@@ -10,11 +12,9 @@ import org.springframework.core.env.Environment;
  */
 public final class DynamicConfigUtil {
 
-    public static String getProperty(Environment environment, DynamicEnums.Type type, DynamicEnums.Rule rule, String property) {
-        return environment.getProperty(DynamicConstants.CONFIG
-                .replace("{type}", type.getName())
-                .replace("{rule}", rule.getKey())
-                .replace("{property}", property));
+    public static String getProperty(String appName, DynamicEnums.Rule rule) {
+        return appName + DynamicConstants.DATA_ID_CLIENT + "-" + rule.getKey() +
+                DynamicConstants.DATA_ID_POSTFIX;
     }
 
 }

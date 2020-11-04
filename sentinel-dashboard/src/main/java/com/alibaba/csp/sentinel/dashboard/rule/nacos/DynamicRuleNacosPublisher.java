@@ -24,7 +24,7 @@ public class DynamicRuleNacosPublisher<T> implements DynamicRulePublisher<List<T
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Environment environment;
+    private NacosConfig nacosConfig;
 
     @Override
     public void publish(String app, List<T> rules, DynamicEnums.Rule rule) throws Exception {
@@ -32,9 +32,7 @@ public class DynamicRuleNacosPublisher<T> implements DynamicRulePublisher<List<T
         if (rules == null) {
             return;
         }
-        configService.publishConfig(
-                DynamicConfigUtil.getProperty(environment, DynamicEnums.Type.Nacos, rule, DynamicConstants.DATA_ID),
-                DynamicConfigUtil.getProperty(environment, DynamicEnums.Type.Nacos, rule, DynamicConstants.GROUP_ID),
+        configService.publishConfig(DynamicConfigUtil.getProperty(app, rule), nacosConfig.getGroupId(),
                 JSON.toJSONString(rules));
     }
 }

@@ -26,13 +26,11 @@ public class DynamicRuleNacosProvider <T> implements DynamicRuleProvider<List<T>
     @Autowired
     private ConfigService configService;
     @Autowired
-    private Environment environment;
+    private NacosConfig nacosConfig;
 
     @Override
     public List<T> getRules(String appName, DynamicEnums.Rule rule) throws Exception {
-        String rules = configService.getConfig(
-                DynamicConfigUtil.getProperty(environment, DynamicEnums.Type.Nacos, rule, DynamicConstants.DATA_ID),
-                DynamicConfigUtil.getProperty(environment, DynamicEnums.Type.Nacos, rule, DynamicConstants.GROUP_ID),
+        String rules = configService.getConfig(DynamicConfigUtil.getProperty(appName, rule), nacosConfig.getGroupId(),
                 3000);
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();

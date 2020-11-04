@@ -37,11 +37,17 @@ public class NacosConfig {
     /**
      * nacos 地址
      */
-    @Value("${spring.cloud.sentinel.nacos-addr}")
-    private String nacosAddr;
+    @Value("${nacos.serverAddr}")
+    private String serverAddr;
 
-    @Value("${spring.cloud.sentinel.nacos-namespace}")
+    @Value("${nacos.namespace}")
     private String namespace;
+
+    @Value("${nacos.group-id}")
+    private String groupId;
+
+    @Value("${nacos.data-type}")
+    private String dataType;
 
     @Bean
     public Converter<List<FlowRuleEntity>, String> flowRuleEntityEncoder() {
@@ -56,8 +62,16 @@ public class NacosConfig {
     @Bean
     public ConfigService nacosConfigService() throws Exception {
         Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, nacosAddr);
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, serverAddr);
         properties.setProperty(PropertyKeyConst.NAMESPACE, namespace);
         return ConfigFactory.createConfigService(properties);
+    }
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public String getDataType() {
+        return dataType;
     }
 }

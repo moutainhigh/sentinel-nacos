@@ -21,16 +21,19 @@ import java.util.List;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicEnums;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
+import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
+import com.alibaba.csp.sentinel.dashboard.util.ParamCheckUtils;
 import com.alibaba.csp.sentinel.util.StringUtil;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.SystemRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
-import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
 import com.alibaba.csp.sentinel.dashboard.domain.Result;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,35 +49,26 @@ public class SystemController {
 
     @Autowired
     private RuleRepository<SystemRuleEntity, Long> repository;
-    @Autowired
-    private SentinelApiClient sentinelApiClient;
 
-    private <R> Result<R> checkBasicParams(String app, String ip, Integer port) {
-        if (StringUtil.isEmpty(app)) {
-            return Result.ofFail(-1, "app can't be null or empty");
-        }
-        if (StringUtil.isEmpty(ip)) {
-            return Result.ofFail(-1, "ip can't be null or empty");
-        }
-        if (port == null) {
-            return Result.ofFail(-1, "port can't be null");
-        }
-        if (port <= 0 || port > 65535) {
-            return Result.ofFail(-1, "port should be in (0, 65535)");
-        }
-        return null;
-    }
+    @Autowired
+    @Qualifier("dynamicRuleNacosProvider")
+    private DynamicRuleProvider<List<SystemRuleEntity>> ruleProvider;
+
+    @Autowired
+    @Qualifier("dynamicRuleNacosPublisher")
+    private DynamicRulePublisher<List<SystemRuleEntity>> rulePublisher;
+
 
     @GetMapping("/rules.json")
     @AuthAction(PrivilegeType.READ_RULE)
     public Result<List<SystemRuleEntity>> apiQueryMachineRules(String app, String ip,
                                                                Integer port) {
-        Result<List<SystemRuleEntity>> checkResult = checkBasicParams(app, ip, port);
+        Result<List<SystemRuleEntity>> checkResult = ParamCheckUtils.checkBasicParams(app, ip, port);
         if (checkResult != null) {
             return checkResult;
         }
         try {
-            List<SystemRuleEntity> rules = sentinelApiClient.fetchSystemRuleOfMachine(app, ip, port);
+            List<SystemRuleEntity> rules = ruleProvider.getRules(app, DynamicEnums.Rule.SYSTEM);
             rules = repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
@@ -99,7 +93,7 @@ public class SystemController {
                                            Double highestSystemLoad, Double highestCpuUsage, Long avgRt,
                                            Long maxThread, Double qps) {
 
-        Result<SystemRuleEntity> checkResult = checkBasicParams(app, ip, port);
+        Result<SystemRuleEntity> checkResult = ParamCheckUtils.checkBasicParams(app, ip, port);
         if (checkResult != null) {
             return checkResult;
         }
@@ -149,12 +143,10 @@ public class SystemController {
         entity.setGmtModified(date);
         try {
             entity = repository.save(entity);
+            publishRules(app);
         } catch (Throwable throwable) {
             logger.error("Add SystemRule error", throwable);
             return Result.ofThrowable(-1, throwable);
-        }
-        if (!publishRules(app, ip, port)) {
-            logger.warn("Publish system rules fail after rule add");
         }
         return Result.ofSuccess(entity);
     }
@@ -211,12 +203,10 @@ public class SystemController {
         entity.setGmtModified(date);
         try {
             entity = repository.save(entity);
+            publishRules(entity.getApp());
         } catch (Throwable throwable) {
             logger.error("save error:", throwable);
             return Result.ofThrowable(-1, throwable);
-        }
-        if (!publishRules(entity.getApp(), entity.getIp(), entity.getPort())) {
-            logger.info("publish system rules fail after rule update");
         }
         return Result.ofSuccess(entity);
     }
@@ -233,18 +223,16 @@ public class SystemController {
         }
         try {
             repository.delete(id);
+            publishRules(oldEntity.getApp());
         } catch (Throwable throwable) {
             logger.error("delete error:", throwable);
             return Result.ofThrowable(-1, throwable);
         }
-        if (!publishRules(oldEntity.getApp(), oldEntity.getIp(), oldEntity.getPort())) {
-            logger.info("publish system rules fail after rule delete");
-        }
         return Result.ofSuccess(id);
     }
 
-    private boolean publishRules(String app, String ip, Integer port) {
-        List<SystemRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
-        return sentinelApiClient.setSystemRuleOfMachine(app, ip, port, rules);
+    private void publishRules(String app) throws Exception {
+        List<SystemRuleEntity> rules = repository.findAllByApp(app);
+        rulePublisher.publish(app, rules, DynamicEnums.Rule.SYSTEM);
     }
 }
